@@ -1,57 +1,84 @@
 # Intelligent Academic Advisory System (IAAS)
 
+> **Note**: This project structure has been scaffolded based on the design documentation.
+
 ## Overview
-The Intelligent Academic Advisory System (IAAS) is a software system designed to support university students in academic decision-making.  
-It assists with course planning, degree progress tracking, and advisory recommendations based on predefined rules and structured academic data.
 
-This project was developed as a senior capstone in Software Engineering.
+The Intelligent Academic Advisory System (IAAS) is a software system designed to support university students in academic decision-making. It assists with course planning, degree progress tracking, and advisory recommendations based on predefined rules and structured academic data.
 
-## Problem Statement
-Academic advising is often manual, inconsistent, and difficult to scale.  
-Students struggle to understand degree requirements, prerequisites, and optimal course sequencing, which leads to delayed graduation and poor academic decisions.
+## Features
 
-IAAS addresses this by formalizing advising logic into a centralized system.
-
-## Core Features
-- Degree requirement evaluation  
-- Course eligibility and prerequisite checking  
-- Academic progress tracking  
-- Rule-based advisory recommendations  
-- Structured student and curriculum data handling  
-
-## System Architecture
-- Backend handles business logic and advisory rules  
-- Database stores students, courses, prerequisites, and degree plans  
-- Frontend provides an interface for interacting with advisory outputs  
-
-Architecture is designed for clarity, separation of concerns, and maintainability.
+- **Chat Advisor**: AI-powered course recommendations using OpenAI GPT-4o-mini.
+- **Degree Progress**: Visual dashboard for tracking academic progress.
+- **Admin Tools**: Dataset management and system monitoring.
 
 ## Tech Stack
-- Backend: Python  
-- Frontend: Web-based interface  
-- Database: Relational database  
-- Architecture: Layered / modular design  
+
+- **Backend**: Python 3.9+ (FastAPI)
+- **Database**: SQLite
+- **Frontend**: HTML/CSS/JS (Templates)
+- **AI**: OpenAI API
+
+## Project Structure
+
+```
+IAAS/
+├── backend/
+│   ├── app/
+│   │   ├── api/            # Route controllers
+│   │   ├── core/           # Config, Security
+│   │   ├── services/       # Business logic (Advisor, Progress)
+│   │   └── main.py         # Entry point
+│   ├── tests/
+│   └── requirements.txt
+├── frontend/
+│   ├── static/             # CSS, JS
+│   └── templates/          # HTML
+├── data/                   # SQLite db, sample CSVs
+└── README.md
+```
 
 ## Setup Instructions
-1. Clone the repository  
-2. Install required dependencies  
-3. Configure environment variables (if applicable)  
-4. Initialize the database  
-5. Run the backend server  
-6. Access the frontend interface  
 
-Detailed setup steps may vary depending on deployment environment.
+### Prerequisites
 
-## Team
-- Feras Alkahtani  
-- Abdulaziz Albaz  
-- Mohammed Alhajri  
+- Python 3.9+
+- OpenAI API Key
 
-## Academic Context
-Capstone Project  
-Bachelor of Software Engineering  
-Alfaisal University  
+### Installation
 
-## Notes
-This project is developed for academic purposes.  
-Not intended for production deployment without further validation and testing.
+1. **Clone the repository**
+
+   ```bash
+   git clone https://github.com/Feras1972-KHT/IAAS.git
+   cd IAAS
+   ```
+
+2. **Backend Setup**
+
+   ```bash
+   cd backend
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   pip install -r requirements.txt
+   ```
+
+3. **Environment Configuration**
+   Create a `.env` file in `backend/` with your API key:
+
+   ```env
+   OPENAI_API_KEY=your_api_key_here
+   ```
+
+4. **Run the Server**
+   ```bash
+   # From the backend directory
+   python -m app.main
+   ```
+   The API will be available at `http://localhost:8000`.
+   API Documentation: `http://localhost:8000/docs`.
+
+## Documentation
+
+- `SE495_Design_Document.pdf`: System Architecture and Design.
+- `SRSV2 (1).pdf`: Software Requirements Specification.
