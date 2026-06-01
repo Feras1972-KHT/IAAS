@@ -1,0 +1,39 @@
+# --- Python ---
+# Compiled bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments (any name, any location)
+.venv/
+venv/
+env/
+ENV/
+
+# Distribution / packaging
+*.egg-info/
+build/
+dist/
+
+# --- Secrets ---
+# Never commit env files — they hold API keys
+.env
+.env.local
+.env.*.local
+
+# --- IDE / OS ---
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# --- Project-specific ---
+# SQLite database files (local data, not source)
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+logs/
