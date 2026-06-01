@@ -1,7 +1,16 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
 from app.core import config
 from app.api import admin, chat
+from app.db.base import Base
+from app.db.session import engine
+from app.models import Course, Student  # needed so create_all picks them up
+
+
+# create tables on startup if they don't exist
+Base.metadata.create_all(bind=engine)
+
 
 app = FastAPI(title=config.settings.PROJECT_NAME)
 
@@ -14,13 +23,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.get("/")
 def read_root():
     return {"message": "Welcome to IAAS API", "status": "running"}
 
-# TODO: Add routers here once created
-# app.include_router(chat.router, prefix=config.settings.API_V1_STR + "/chat", tags=["chat"])
-# app.include_router(admin.router, prefix=config.settings.API_V1_STR + "/admin", tags=["admin"])
+
+# wire up the routers
+app.include_router(chat.router, prefix=config.settings.API_V1_STR + "/chat", tags=["chat"])
+app.include_router(admin.router, prefix=config.settings.API_V1_STR + "/admin", tags=["admin"])
+
 
 if __name__ == "__main__":
     import uvicorn
