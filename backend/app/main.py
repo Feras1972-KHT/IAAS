@@ -5,8 +5,7 @@ from app.core import config
 from app.api import admin, chat
 from app.db.base import Base
 from app.db.session import engine
-from app.models import Course, Student  # needed so create_all picks them up
-
+from app.models import Course, Student  
 
 # create tables on startup if they don't exist
 Base.metadata.create_all(bind=engine)
@@ -29,7 +28,7 @@ def read_root():
     return {"message": "Welcome to IAAS API", "status": "running"}
 
 
-# wire up the routers
+# connect the routers
 app.include_router(chat.router, prefix=config.settings.API_V1_STR + "/chat", tags=["chat"])
 app.include_router(admin.router, prefix=config.settings.API_V1_STR + "/admin", tags=["admin"])
 
