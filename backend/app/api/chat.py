@@ -22,6 +22,6 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
     # get all courses
     courses = db.query(Course).all()
 
-    # run the advisor
+    # run the advisor with conversation history
     advisor = AdvisorEngine()
-    return advisor.get_recommendation(student, courses, request.query)
+    return advisor.get_recommendation(student, courses, request.query, request.history)

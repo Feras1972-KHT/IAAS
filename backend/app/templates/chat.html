@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>IAAS - Academic Advisor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-6">
+
+    <h1 class="text-2xl font-bold mb-2">IAAS Academic Advisor</h1>
+    <p class="text-gray-600 mb-4">Ask about courses, prerequisites, and what to take next.</p>
+
+    <!-- pick a student -->
+    <div class="mb-4 max-w-xl">
+        <label class="block mb-1">Student:</label>
+        <select id="student-select" onchange="resetChat()" class="border p-2 rounded w-full">
+            <option value="1">Alia Al-Mansour (Year 3)</option>
+            <option value="2">Faisal Alkahtani (Year 4)</option>
+        </select>
+    </div>
+
+    <!-- chat messages -->
+    <div id="chat-area" class="bg-white rounded shadow p-4 mb-4 max-w-xl min-h-[200px]">
+        <p id="empty-msg" class="text-gray-400 text-center">Start the conversation below.</p>
+    </div>
+
+    <!-- input -->
+    <div class="max-w-xl flex gap-2">
+        <input id="query" type="text" placeholder="What should I take next semester?"
+            class="border p-2 rounded flex-1"
+            onkeydown="if (event.key === 'Enter') sendMessage()">
+        <button onclick="sendMessage()" id="send-btn"
+            class="bg-blue-600 text-white px-4 py-2 rounded">
+            Send
+        </button>
+    </div>
+
+    <!-- disclaimer -->
+    <p class="text-sm text-yellow-800 bg-yellow-100 p-3 rounded mt-6 max-w-xl">
+        Note: IAAS recommendations are advisory only. Please consult your academic advisor before finalizing course registration.
+    </p>
+
+    <script>
+        let history = [];
+
+        function resetChat() {
+            history = [];
+            document.getElementById('chat-area').innerHTML = '<p class="text-gray-400 text-center">Start the conversation below.</p>';
+        }
+
+        async function sendMessage() {
+            const queryInput = document.getElementById('query');
+            const query = queryInput.value.trim();
+            if (!query) return;
+
+            const studentId = parseInt(document.getElementById('student-select').value);
+
+            // clear placeholder
+            const emptyMsg = document.getElementById('empty-msg');
+            if (emptyMsg) emptyMsg.remove();
+
+            // add user bubble
+            addBubble('user', query, []);
+            queryInput.value = '';
+
+            // loading indicator
+            const chatArea = document.getElementById('chat-area');
+            const loadingId = 'loading-' + Date.now();
+            chatArea.innerHTML += '<p id="' + loadingId + '" class="text-gray-400 mb-3">Thinking...</p>';
+
+            try {
+                const res = await fetch('/api/v1/chat/', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        student_id: studentId,
+                        query: query,
+                        history: history
+                    })
+                });
+                const data = await res.json();
+
+                // remove loading
+                document.getElementById(loadingId).remove();
+
+                // save turn to history for context in next message
+                history.push({role: 'user', content: query});
+                history.push({role: 'assistant', content: data.answer});
+
+                addBubble('assistant', data.answer, data.recommended_courses || []);
+            } catch (e) {
+                document.getElementById(loadingId).remove();
+                addBubble('assistant', 'Error: ' + e.message, []);
+            }
+        }
+
+        function addBubble(role, text, courses) {
+            const chatArea = document.getElementById('chat-area');
+            if (role === 'user') {
+                chatArea.innerHTML += '<div class="mb-3 flex justify-end"><div class="bg-blue-600 text-white p-2 rounded max-w-md">' + text + '</div></div>';
+            } else {
+                let html = '<div class="mb-3"><div class="bg-gray-100 p-3 rounded max-w-md">';
+                html += '<p>' + text + '</p>';
+                if (courses && courses.length > 0) {
+                    html += '<ul class="list-disc list-inside mt-2 text-sm">';
+                    for (const c of courses) {
+                        html += '<li>' + c.code + ' - ' + c.name + ' (' + c.credits + ' cr)</li>';
+                    }
+                    html += '</ul>';
+                }
+                html += '</div></div>';
+                chatArea.innerHTML += html;
+            }
+        }
+    </script>
+
+</body>
+</html>

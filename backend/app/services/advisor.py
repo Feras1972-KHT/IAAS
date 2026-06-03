@@ -9,19 +9,14 @@ from app.models.schemas import ChatResponse, CourseRead
 from app.services.prereq import get_eligible_courses
 
 
-SYSTEM_PROMPT = (
-    "You are an academic advisor for Software Engineering students at "
-    "Alfaisal University. Recommend courses based on the student's "
-    "completed courses and the eligible list provided. Only recommend "
-    "from the eligible list."
-)
-
-
 class AdvisorEngine:
     def __init__(self):
         self.client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
-    def get_recommendation(self, student, all_courses, query):
+    def get_recommendation(self, student, all_courses, query, history=None):
+        if history is None:
+            history = []
+
         # get eligible courses using the prereq engine
         eligible = get_eligible_courses(student, all_courses)
 
@@ -33,7 +28,7 @@ class AdvisorEngine:
                 source="rule-based",
             )
 
-        # build the user prompt
+        # build the system prompt with the student's context
         completed_codes = []
         for c in student.completed_courses:
             completed_codes.append(c.code)
@@ -43,27 +38,31 @@ class AdvisorEngine:
         for c in eligible:
             eligible_lines += f"- {c.code}: {c.name} ({c.credits} cr)\n"
 
-        user_msg = f"""Student: {student.name} (Year {student.year}, {student.major})
+        system_prompt = f"""You are an academic advisor for Software Engineering students at Alfaisal University. Help students plan their courses based on the information below.
+
+Current student:
+Name: {student.name} (Year {student.year}, {student.major})
 Completed courses ({len(completed_codes)}): {", ".join(completed_codes)}
 
 Eligible courses for next semester (prerequisites met):
 {eligible_lines}
 
-Student question: {query}
-
-Recommend 3-5 specific courses from the eligible list. Return JSON:
+Recommend 3-5 specific courses from the eligible list. Only recommend from the eligible list. Return your response as JSON:
 {{
   "answer": "2-4 sentence explanation",
   "recommended_codes": ["SE 310", "SE 324"]
 }}"""
 
+        # build the messages: system + previous turns + current query
+        messages = [{"role": "system", "content": system_prompt}]
+        for msg in history:
+            messages.append(msg)
+        messages.append({"role": "user", "content": query})
+
         # call OpenAI
         response = self.client.chat.completions.create(
             model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": user_msg},
-            ],
+            messages=messages,
             response_format={"type": "json_object"},
         )
 
@@ -72,7 +71,6 @@ Recommend 3-5 specific courses from the eligible list. Return JSON:
         recommended_codes = parsed.get("recommended_codes", [])
 
         # convert recommended codes to CourseRead objects
-        # build a lookup dict so we can find courses by code quickly
         eligible_by_code = {}
         for c in eligible:
             eligible_by_code[c.code] = c

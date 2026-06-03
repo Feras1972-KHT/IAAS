@@ -28,6 +28,7 @@ class StudentRead(BaseModel):
 class ChatRequest(BaseModel):
     student_id: int
     query: str
+    history: list[dict] = []  # prior turns: [{role: user/assistant, content: text}]
 
 
 class ChatResponse(BaseModel):
