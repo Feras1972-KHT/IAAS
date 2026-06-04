@@ -6,6 +6,13 @@
 </head>
 <body class="bg-gray-100 p-6">
 
+    <!-- nav -->
+    <nav class="mb-4 max-w-xl">
+        <a href="/" class="text-blue-600 font-bold">Chat</a>
+        <span class="mx-2 text-gray-400">|</span>
+        <a href="/progress" class="text-blue-600 hover:underline">Progress</a>
+    </nav>
+
     <h1 class="text-2xl font-bold mb-2">IAAS Academic Advisor</h1>
     <p class="text-gray-600 mb-4">Ask about courses, prerequisites, and what to take next.</p>
 
@@ -64,8 +71,7 @@
 
             // loading indicator
             const chatArea = document.getElementById('chat-area');
-            const loadingId = 'loading-' + Date.now();
-            chatArea.innerHTML += '<p id="' + loadingId + '" class="text-gray-400 mb-3">Thinking...</p>';
+            chatArea.innerHTML += '<p id="loading" class="text-gray-400 mb-3">Thinking...</p>';
 
             try {
                 const res = await fetch('/api/v1/chat/', {
@@ -80,7 +86,7 @@
                 const data = await res.json();
 
                 // remove loading
-                document.getElementById(loadingId).remove();
+                document.getElementById('loading').remove();
 
                 // save turn to history for context in next message
                 history.push({role: 'user', content: query});
@@ -88,7 +94,7 @@
 
                 addBubble('assistant', data.answer, data.recommended_courses || []);
             } catch (e) {
-                document.getElementById(loadingId).remove();
+                document.getElementById('loading').remove();
                 addBubble('assistant', 'Error: ' + e.message, []);
             }
         }
