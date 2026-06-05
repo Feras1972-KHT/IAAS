@@ -32,6 +32,29 @@ def chat_page(request: Request):
     return templates.TemplateResponse("chat.html", {"request": request})
 
 
+@router.get("/admin", response_class=HTMLResponse)
+def admin_page(request: Request, db: Session = Depends(get_db)):
+    courses = db.query(Course).all()
+    students = db.query(Student).all()
+
+    # group courses by semester for the checkbox form
+    by_semester = {}
+    for c in courses:
+        sem = c.semester or 0
+        if sem not in by_semester:
+            by_semester[sem] = []
+        by_semester[sem].append(c)
+    sorted_semesters = sorted(by_semester.items())
+
+    return templates.TemplateResponse("admin.html", {
+        "request": request,
+        "courses": courses,
+        "students": students,
+        "by_semester": sorted_semesters,
+        "semester_names": SEMESTER_NAMES,
+    })
+
+
 @router.get("/progress", response_class=HTMLResponse)
 def progress_page(request: Request, student_id: int = 1, db: Session = Depends(get_db)):
     # find the student

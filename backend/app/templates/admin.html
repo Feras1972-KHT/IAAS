@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>IAAS - Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-6">
+
+    <!-- nav -->
+    <nav class="mb-4 max-w-5xl">
+        <a href="/" class="text-blue-600 hover:underline">Chat</a>
+        <span class="mx-2 text-gray-400">|</span>
+        <a href="/progress" class="text-blue-600 hover:underline">Progress</a>
+        <span class="mx-2 text-gray-400">|</span>
+        <a href="/admin" class="text-blue-600 font-bold">Admin</a>
+    </nav>
+
+    <h1 class="text-2xl font-bold mb-4">Admin Dashboard</h1>
+
+    <!-- add student form -->
+    <div class="bg-white rounded shadow p-4 mb-6 max-w-5xl">
+        <h2 class="font-bold mb-3">Add Student</h2>
+        <form id="add-form" class="space-y-3">
+            <div>
+                <label class="block text-sm mb-1">Name</label>
+                <input type="text" id="name" required class="border p-2 rounded w-full">
+            </div>
+            <div>
+                <label class="block text-sm mb-1">Year (1-4)</label>
+                <input type="number" id="year" min="1" max="4" required class="border p-2 rounded w-full">
+            </div>
+            <div>
+                <label class="block text-sm mb-2">Completed courses</label>
+                <div class="border rounded p-3 max-h-96 overflow-y-auto bg-gray-50">
+                    {% for sem_num, sem_courses in by_semester %}
+                        <div class="semester-section mb-3">
+                            <div class="flex items-center gap-2 mb-1">
+                                <h4 class="font-semibold text-sm text-gray-700">{{ semester_names[sem_num] }}</h4>
+                                <button type="button" onclick="toggleSemester(this)" class="text-xs bg-gray-200 hover:bg-gray-300 px-2 py-0.5 rounded">Select all</button>
+                            </div>
+                            <div class="grid grid-cols-2 md:grid-cols-3 gap-1 text-sm">
+                                {% for c in sem_courses %}
+                                    <label class="flex items-center gap-1">
+                                        <input type="checkbox" value="{{ c.code }}" class="course-checkbox">
+                                        <span>{{ c.code }}</span>
+                                    </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Add Student</button>
+        </form>
+        <div id="result" class="mt-3 text-sm"></div>
+    </div>
+
+    <!-- students table -->
+    <div class="bg-white rounded shadow p-4 mb-6 max-w-5xl">
+        <h2 class="font-bold mb-2">Students ({{ students|length }})</h2>
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="border-b">
+                    <th class="text-left p-2">Name</th>
+                    <th class="text-left p-2">Year</th>
+                    <th class="text-left p-2">Major</th>
+                    <th class="text-left p-2">Completed</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in students %}
+                    <tr class="border-b">
+                        <td class="p-2">{{ s.name }}</td>
+                        <td class="p-2">{{ s.year }}</td>
+                        <td class="p-2">{{ s.major }}</td>
+                        <td class="p-2">{{ s.completed_courses|length }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- courses table -->
+    <div class="bg-white rounded shadow p-4 mb-6 max-w-5xl">
+        <h2 class="font-bold mb-2">Course Catalog ({{ courses|length }})</h2>
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="border-b">
+                    <th class="text-left p-2">Code</th>
+                    <th class="text-left p-2">Name</th>
+                    <th class="text-left p-2">Credits</th>
+                    <th class="text-left p-2">Semester</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in courses %}
+                    <tr class="border-b">
+                        <td class="p-2">{{ c.code }}</td>
+                        <td class="p-2">{{ c.name }}</td>
+                        <td class="p-2">{{ c.credits }}</td>
+                        <td class="p-2">{{ c.semester }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // toggle all checkboxes in a semester section
+        function toggleSemester(btn) {
+            const section = btn.closest('.semester-section');
+            const checkboxes = section.querySelectorAll('.course-checkbox');
+
+            // check if all are already checked
+            let allChecked = true;
+            for (const cb of checkboxes) {
+                if (!cb.checked) {
+                    allChecked = false;
+                    break;
+                }
+            }
+
+            // toggle: if all checked, uncheck all; otherwise check all
+            for (const cb of checkboxes) {
+                cb.checked = !allChecked;
+            }
+        }
+
+        document.getElementById('add-form').onsubmit = async function(e) {
+            e.preventDefault();
+
+            const name = document.getElementById('name').value;
+            const year = parseInt(document.getElementById('year').value);
+
+            // collect codes from all checked boxes
+            const codes = [];
+            const checked = document.querySelectorAll('.course-checkbox:checked');
+            for (const cb of checked) {
+                codes.push(cb.value);
+            }
+
+            const resultDiv = document.getElementById('result');
+            resultDiv.textContent = 'Adding...';
+
+            try {
+                const res = await fetch('/api/v1/admin/students', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        name: name,
+                        year: year,
+                        completed_codes: codes
+                    })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    resultDiv.textContent = 'Added student: ' + data.name;
+                    setTimeout(function() {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    resultDiv.textContent = 'Error: ' + (data.detail || 'unknown error');
+                }
+            } catch (err) {
+                resultDiv.textContent = 'Error: ' + err.message;
+            }
+        };
+    </script>
+
+</body>
+</html>
