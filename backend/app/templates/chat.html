@@ -22,8 +22,9 @@
     <div class="mb-4 max-w-xl">
         <label class="block mb-1">Student:</label>
         <select id="student-select" onchange="resetChat()" class="border p-2 rounded w-full">
-            <option value="1">Alia Al-Mansour (Year 3)</option>
-            <option value="2">Faisal Alkahtani (Year 4)</option>
+            {% for s in all_students %}
+                <option value="{{ s.id }}">{{ s.name }} (Year {{ s.year }})</option>
+            {% endfor %}
         </select>
     </div>
 

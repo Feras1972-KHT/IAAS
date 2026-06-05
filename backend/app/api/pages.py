@@ -28,8 +28,12 @@ SEMESTER_NAMES = {
 
 
 @router.get("/", response_class=HTMLResponse)
-def chat_page(request: Request):
-    return templates.TemplateResponse("chat.html", {"request": request})
+def chat_page(request: Request, db: Session = Depends(get_db)):
+    all_students = db.query(Student).all()
+    return templates.TemplateResponse("chat.html", {
+        "request": request,
+        "all_students": all_students,
+    })
 
 
 @router.get("/admin", response_class=HTMLResponse)
